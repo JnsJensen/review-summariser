@@ -35,7 +35,7 @@ class DatasetType(Enum):
     TOKENIZED = 2
 
 class MaxTokenLength():
-    ARTS_REVIEW = 4525
+    ARTS_REVIEW = 713
     ARTS_SUMMARY = 67
     VIDEO_REVIEW = 4064
     VIDEO_SUMMARY = 61
@@ -84,8 +84,11 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
            .filter(pl.col("summary") != "four stars") \
            .filter(pl.col("summary") != "three stars") \
            .filter(pl.col("summary") != "two stars") \
-           .filter(pl.col("summary") != "one star")
-    
+           .filter(pl.col("summary") != "one star") \
+           .filter(pl.col("summary").str.lengths() > 35) \
+           .filter(pl.col("reviewText").str.lengths() > 40) \
+           .filter(pl.col("reviewText").str.lengths() < 2350)
+
     df = df.lazy().select([
         pl.col("overall").apply(lambda x: int(x)/5),
         pl.exclude(["overall"])
