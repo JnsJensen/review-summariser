@@ -18,10 +18,10 @@ class Paths:
     video = "Amazon_Instant_Video_5" # 28 MB
     gift = "Gift_Cards_5" # 0.88 MB
 
-    PAD_token = "<|pad|>"
-    BOS_token = "<|bos|>"
-    EOS_token = "<|eos|>"
-    UNK_token = "<|unk|>"
+PAD_token = "<|padding|>"
+BOS_token = "<|startoftext|>"
+EOS_token = "<|endoftext|>"
+UNK_token = "<|unknown|>"
 
 """
 DatasetType enum
