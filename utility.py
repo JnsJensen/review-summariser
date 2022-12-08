@@ -34,6 +34,14 @@ class DatasetType(Enum):
     PRUNED = 1
     TOKENIZED = 2
 
+class MaxTokenLength():
+    ARTS_REVIEW = 4525
+    ARTS_SUMMARY = 67
+    VIDEO_REVIEW = 4064
+    VIDEO_SUMMARY = 61
+    GIFT_REVIEW = 553
+    GIFT_SUMMARY = 27
+
 listify = lambda x: x.split("|")
 stringify = lambda x: "|".join(list(x.cast(pl.Utf8)))
 
