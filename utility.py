@@ -4,6 +4,10 @@ import contractions as ct
 import pandas as pd
 import polars as pl
 from transformers import GPT2Tokenizer
+import math
+from torch.utils.data import DataLoader
+from torch.utils.data import random_split
+import os
 
 class Paths:
     data_dir = "datasets/"
@@ -52,7 +56,14 @@ Normalizes strings by:
 - Expanding contractions
 """
 def normalize_text(text: str) -> str:
-    return re.sub(r"\s+", " ", ct.fix(text.lower()))
+    text = text.lower()
+    text = ct.fix(text)
+    text = re.sub(r"\s+", " ", text)
+    # # remove non-ascii characters
+    # text = re.sub(r'[^\x00-\x7F]+', ' ', text)
+    # # remove all symbols
+    # text = re.sub(r'[^\w\s]', ' ', text)
+    return text
 
 """
 Normalizes the reviewText and summary columns of a dataframe by:
@@ -80,14 +91,15 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
 
     df = normalize_text_df(df)
 
-    df = df.filter(pl.col("summary") != "five stars") \
-           .filter(pl.col("summary") != "four stars") \
-           .filter(pl.col("summary") != "three stars") \
-           .filter(pl.col("summary") != "two stars") \
-           .filter(pl.col("summary") != "one star") \
-           .filter(pl.col("summary").str.lengths() > 35) \
-           .filter(pl.col("reviewText").str.lengths() > 40) \
-           .filter(pl.col("reviewText").str.lengths() < 2350)
+    df = df.filter(pl.col("reviewText").str.split(" ").apply(len) > 15) \
+           .filter(pl.col("reviewText").str.split(" ").apply(len) < 100) \
+           .filter(pl.col("summary").str.split(" ").apply(len) > 5) \
+           .filter(pl.col("summary").str.split(" ").apply(len) < 15)
+        #    .filter(pl.col("summary") != "five stars") \
+        #    .filter(pl.col("summary") != "four stars") \
+        #    .filter(pl.col("summary") != "three stars") \
+        #    .filter(pl.col("summary") != "two stars") \
+        #    .filter(pl.col("summary") != "one star") \
 
     df = df.lazy().select([
         pl.col("overall").apply(lambda x: int(x)/5),
@@ -202,6 +214,50 @@ class Modifiers:
         ITALIC = '\033[3m'
 
     ENDC = '\033[0m'
+
+
+def get_run_dir() -> str:
+    # keep track of the count
+    count = 0
+    try:
+        # read previous count from file
+        with open("count.txt", "r") as f:
+            count = int(f.read())
+    except:
+        print("No count file found. Reading from runs/ folder...")
+        # check the first three character of each file in runs/ folder, and initialise count to the highest number found
+        found_file = False
+        for file in os.listdir("runs/"):
+            if file[:3].isdigit():
+                count = max(count, int(file[:3]))
+                found_file = True
+        
+        if not found_file:
+            print("No file found starting with digits in runs/ folder. Starting from 0...")
+
+    count += 1
+
+    # write count to file
+    with open("count.txt", "w") as f:
+        f.write(str(count))
+
+    return f"runs/{count:03d}"
+
+def get_data_loaders(dataset, batch_size, split_ratios):
+    """
+    Returns the data loaders for the train, validate and test datasets
+    """
+    num_reviwes = len(dataset)
+    n_train_dataset = math.floor(num_reviwes * split_ratios[0])
+    n_validate_dataset = math.floor(num_reviwes * split_ratios[1])
+    n_test_dataset = num_reviwes - n_train_dataset - n_validate_dataset
+
+    train_dataset, val_dataset, test_dataset = random_split(dataset, [n_train_dataset, n_validate_dataset, n_test_dataset])
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader
 
 """
 Modified printing for the terminal
