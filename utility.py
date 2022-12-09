@@ -180,3 +180,31 @@ def preprocess(dataset: str, dataset_type: DatasetType, tokenizer, keep_cols = [
     elif dataset_type == DatasetType.TOKENIZED:
         df = load_dataset(dataset, dataset_type)
         return df
+
+class Modifiers:
+    """
+    Class of escape sequences for color printing
+    """
+    class Colors:
+        BLUE = '\033[94m'
+        GREEN = '\033[92m'
+        YELLOW = '\033[93m'
+        RED = '\033[91m'
+        PURPLE = '\033[95m'
+        CYAN = '\033[96m'
+        WHITE = '\033[97m'
+        BLACK = '\033[30m'
+        MAGENTA = '\033[35m'
+    
+    class Styles:
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+        ITALIC = '\033[3m'
+
+    ENDC = '\033[0m'
+
+"""
+Modified printing for the terminal
+"""
+def print_mod(text: str, modifiers: list) -> None:
+    print("".join(modifiers) + text + Modifiers.ENDC)
