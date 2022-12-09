@@ -39,8 +39,8 @@ class DatasetType(Enum):
     TOKENIZED = 2
 
 class MaxTokenLength():
-    ARTS_REVIEW = 713
-    ARTS_SUMMARY = 67
+    ARTS_REVIEW = 424
+    ARTS_SUMMARY = 43
     VIDEO_REVIEW = 4064
     VIDEO_SUMMARY = 61
     GIFT_REVIEW = 553
@@ -59,10 +59,10 @@ def normalize_text(text: str) -> str:
     text = text.lower()
     text = ct.fix(text)
     text = re.sub(r"\s+", " ", text)
-    # # remove non-ascii characters
-    # text = re.sub(r'[^\x00-\x7F]+', ' ', text)
-    # # remove all symbols
-    # text = re.sub(r'[^\w\s]', ' ', text)
+    # remove non-ascii characters
+    text = re.sub(r'[^\x00-\x7F]+', ' ', text)
+    # remove all symbols
+    text = re.sub(r'[^\w\s]', ' ', text)
     return text
 
 """
