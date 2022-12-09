@@ -56,13 +56,16 @@ Normalizes strings by:
 - Expanding contractions
 """
 def normalize_text(text: str) -> str:
+    # Lowercase text
     text = text.lower()
+    # Expand contractions
     text = ct.fix(text)
-    text = re.sub(r"\s+", " ", text)
-    # remove non-ascii characters
+    # Remove non-ascii characters
     text = re.sub(r'[^\x00-\x7F]+', ' ', text)
-    # remove all symbols
+    # Remove all symbols
     text = re.sub(r'[^\w\s]', ' ', text)
+    # Remove spaces
+    text = re.sub(r"\s+", " ", text)
     return text
 
 """
