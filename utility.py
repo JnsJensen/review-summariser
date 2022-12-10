@@ -272,7 +272,6 @@ def print_mod(text: str, modifiers: list) -> None:
     print("".join(modifiers) + text + Modifiers.ENDC)
 
 """
-<<<<<<< HEAD
 Get a bounded list of colors from a colormap
 """
 def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
@@ -283,7 +282,8 @@ def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
         color_lims = [0.5 * (1 - percentage_range), 0.5 * (1 + percentage_range)]
     
     return [cmap(i) for i in np.linspace(color_lims[0], color_lims[1], num_colors)]
-=======
+
+"""
 Custom word tokenizer
 """
 class WordTokenizer():
@@ -308,4 +308,3 @@ class WordTokenizer():
 
     def __len__(self):
         return len(self.vocab)
->>>>>>> f7349429065180c09469c85edb1d24c35f880fa6
