@@ -8,6 +8,7 @@ import math
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 import os
+import numpy as np
 
 class Paths:
     data_dir = "datasets/"
@@ -66,7 +67,7 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', ' ', text)
     # Remove spaces
     text = re.sub(r"\s+", " ", text)
-    # Remove trailing spaces
+    # Remove leading and trailing spaces
     text = text.strip()
     return text
 
@@ -269,6 +270,18 @@ Modified printing for the terminal
 """
 def print_mod(text: str, modifiers: list) -> None:
     print("".join(modifiers) + text + Modifiers.ENDC)
+
+"""
+Get a bounded list of colors from a colormap
+"""
+def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
+    # if color limits are empty, then use a range proportional to the number of colors
+    # the higher the number of colors, the larger the range, approaching the full range of the colormap
+    if len(color_lims) == 0:
+        percentage_range = (1 - (1 / num_colors)) * 0.75
+        color_lims = [0.5 * (1 - percentage_range), 0.5 * (1 + percentage_range)]
+    
+    return [cmap(i) for i in np.linspace(color_lims[0], color_lims[1], num_colors)]
 
 """
 Custom word tokenizer
