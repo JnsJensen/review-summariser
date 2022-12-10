@@ -96,7 +96,7 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
     assert(isinstance(df, pl.DataFrame))
 
     # Filter out rows where the summary is the start of the review
-    df = df.filter(pl.col("summary").str.contains(" ...").is_not())
+    df = df.filter(pl.col("summary").str.ends_with(" ...").is_not())
 
     # Normalise text strings
     df = normalize_text_df(df)
