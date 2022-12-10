@@ -8,6 +8,7 @@ import math
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 import os
+import numpy as np
 
 class Paths:
     data_dir = "datasets/"
@@ -39,7 +40,7 @@ class DatasetType(Enum):
     TOKENIZED = 2
 
 class MaxTokenLength():
-    ARTS_REVIEW = 177
+    ARTS_REVIEW = 206
     ARTS_SUMMARY = 37
     VIDEO_REVIEW = 4064
     VIDEO_SUMMARY = 61
@@ -66,6 +67,8 @@ def normalize_text(text: str) -> str:
     text = re.sub(r'[^\w\s]', ' ', text)
     # Remove spaces
     text = re.sub(r"\s+", " ", text)
+    # Remove leading and trailing spaces
+    text = text.strip()
     return text
 
 """
@@ -98,11 +101,6 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
            .filter(pl.col("reviewText").str.split(" ").apply(len) < 100) \
            .filter(pl.col("summary").str.split(" ").apply(len) > 5) \
            .filter(pl.col("summary").str.split(" ").apply(len) < 15)
-        #    .filter(pl.col("summary") != "five stars") \
-        #    .filter(pl.col("summary") != "four stars") \
-        #    .filter(pl.col("summary") != "three stars") \
-        #    .filter(pl.col("summary") != "two stars") \
-        #    .filter(pl.col("summary") != "one star") \
 
     df = df.lazy().select([
         pl.col("overall").apply(lambda x: int(x)/5),
@@ -267,3 +265,15 @@ Modified printing for the terminal
 """
 def print_mod(text: str, modifiers: list) -> None:
     print("".join(modifiers) + text + Modifiers.ENDC)
+
+"""
+Get a bounded list of colors from a colormap
+"""
+def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
+    # if color limits are empty, then use a range proportional to the number of colors
+    # the higher the number of colors, the larger the range, approaching the full range of the colormap
+    if len(color_lims) == 0:
+        percentage_range = (1 - (1 / num_colors)) * 0.75
+        color_lims = [0.5 * (1 - percentage_range), 0.5 * (1 + percentage_range)]
+    
+    return [cmap(i) for i in np.linspace(color_lims[0], color_lims[1], num_colors)]
