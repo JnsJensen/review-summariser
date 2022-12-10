@@ -95,8 +95,13 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
         df = pl.DataFrame(df.dropna())
     assert(isinstance(df, pl.DataFrame))
 
+    # Filter out rows where the summary is the start of the review
+    df = df.filter(pl.col("summary").str.contains(" ...").is_not())
+
+    # Normalise text strings
     df = normalize_text_df(df)
 
+    # Filter data points that are too short or too long
     df = df.filter(pl.col("reviewText").str.split(" ").apply(len) > 15) \
            .filter(pl.col("reviewText").str.split(" ").apply(len) < 100) \
            .filter(pl.col("summary").str.split(" ").apply(len) > 5) \
@@ -267,6 +272,7 @@ def print_mod(text: str, modifiers: list) -> None:
     print("".join(modifiers) + text + Modifiers.ENDC)
 
 """
+<<<<<<< HEAD
 Get a bounded list of colors from a colormap
 """
 def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
@@ -277,3 +283,29 @@ def get_colors_from_cmap(num_colors: int, cmap, color_lims=[]):
         color_lims = [0.5 * (1 - percentage_range), 0.5 * (1 + percentage_range)]
     
     return [cmap(i) for i in np.linspace(color_lims[0], color_lims[1], num_colors)]
+=======
+Custom word tokenizer
+"""
+class WordTokenizer():
+    def __init__(self, df: pl.DataFrame, cols: list[str] = ["reviewText", "summary"]):
+        self.df = df
+        self.cols = cols
+        self.word_tokenizer = lambda s : re.split(r"\s+", s)
+        self.vocab = self.create_vocab()
+
+    def create_vocab(self):
+        vocab = set()
+        
+        for col in self.cols:
+            for text in self.df[col]:
+                for word in self.word_tokenizer(text):
+                    vocab.add(word)
+
+        return dict([(word, i) for i, word in enumerate(vocab)])
+    
+    def get_vocab(self):
+        return self.vocab
+
+    def __len__(self):
+        return len(self.vocab)
+>>>>>>> f7349429065180c09469c85edb1d24c35f880fa6
