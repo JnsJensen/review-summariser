@@ -92,17 +92,17 @@ def prune(df: pd.DataFrame | pl.DataFrame) -> pl.DataFrame:
         df = pl.DataFrame(df.dropna())
     assert(isinstance(df, pl.DataFrame))
 
+    # Filter out rows where the summary is the start of the review
+    df = df.filter(pl.col("summary").str.contains(" ...").is_not())
+
+    # Normalise text strings
     df = normalize_text_df(df)
 
+    # Filter data points that are too short or too long
     df = df.filter(pl.col("reviewText").str.split(" ").apply(len) > 15) \
            .filter(pl.col("reviewText").str.split(" ").apply(len) < 100) \
            .filter(pl.col("summary").str.split(" ").apply(len) > 5) \
            .filter(pl.col("summary").str.split(" ").apply(len) < 15)
-        #    .filter(pl.col("summary") != "five stars") \
-        #    .filter(pl.col("summary") != "four stars") \
-        #    .filter(pl.col("summary") != "three stars") \
-        #    .filter(pl.col("summary") != "two stars") \
-        #    .filter(pl.col("summary") != "one star") \
 
     df = df.lazy().select([
         pl.col("overall").apply(lambda x: int(x)/5),
@@ -267,3 +267,29 @@ Modified printing for the terminal
 """
 def print_mod(text: str, modifiers: list) -> None:
     print("".join(modifiers) + text + Modifiers.ENDC)
+
+"""
+Custom word tokenizer
+"""
+class WordTokenizer():
+    def __init__(self, df: pl.DataFrame, cols: list[str] = ["reviewText", "summary"]):
+        self.df = df
+        self.cols = cols
+        self.word_tokenizer = lambda s : re.split(r"\s+", s)
+        self.vocab = self.create_vocab()
+
+    def create_vocab(self):
+        vocab = set()
+        
+        for col in self.cols:
+            for text in self.df[col]:
+                for word in self.word_tokenizer(text):
+                    vocab.add(word)
+
+        return dict([(word, i) for i, word in enumerate(vocab)])
+    
+    def get_vocab(self):
+        return self.vocab
+
+    def __len__(self):
+        return len(self.vocab)
