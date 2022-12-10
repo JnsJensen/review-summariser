@@ -39,7 +39,7 @@ class DatasetType(Enum):
     TOKENIZED = 2
 
 class MaxTokenLength():
-    ARTS_REVIEW = 177
+    ARTS_REVIEW = 206
     ARTS_SUMMARY = 37
     VIDEO_REVIEW = 4064
     VIDEO_SUMMARY = 61
