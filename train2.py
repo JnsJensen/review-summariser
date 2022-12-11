@@ -196,7 +196,7 @@ learning_rate = 0.00001
 teacher_forcing_ratio = 0.5
 hidden_size = 2**8 # 256
 dataset_size = 8000
-num_layers = 2 # LSTM or GRU layers
+num_layers = 4 # LSTM or GRU layers
 bidirectional = False
 
 #-----------------------------------------------------------------------------------------------------------------------------------

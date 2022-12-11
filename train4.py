@@ -131,10 +131,10 @@ class AttnDecoderRNN(nn.Module):
 
         self.embedding = nn.Embedding(self.output_size, self.hidden_size)
         self.attn = nn.Linear(self.hidden_size * 2, self.max_length)
-        self.attn_combine = nn.Linear(self.hidden_size * 2, self.hidden_size)
+        self.attn_combine = nn.Linear(self.hidden_size * (2 + 1 if bidirectional else 0), self.hidden_size)
         self.gru = nn.GRU(self.hidden_size, self.hidden_size, num_layers=num_layers, bidirectional=bidirectional)
         # self.lstm = nn.LSTM(self.hidden_size, self.hidden_size, num_layers=num_layers, bidirectional=False)
-        self.out = nn.Linear(self.hidden_size, self.output_size)
+        self.out = nn.Linear(self.hidden_size * (2 if bidirectional else 0), self.output_size)
 
     def forward(self, input, hidden, context_vector):
         embedded = self.embedding(input).view(1, 1, -1)
@@ -189,7 +189,7 @@ def save_state(loss, accuracy, encoder_model, decoder_model, encoder_optimiser, 
 
 # Prepare for training
 debugging = False # For debugging prints
-model_version = "2.2.0_GRU"
+model_version = "3.0.0_GRU_bi"
 n_epochs = 1000
 batch_size = 64
 learning_rate = 0.00001
@@ -197,7 +197,7 @@ teacher_forcing_ratio = 0.5
 hidden_size = 2**8 # 256
 dataset_size = 8000
 num_layers = 2 # LSTM or GRU layers
-bidirectional = False
+bidirectional = True
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -212,7 +212,7 @@ writer = SummaryWriter(run_dir)
 
 # criterion = nn.CrossEntropyLoss(label_smoothing=0.1) # TODO: Check without the ignore_index
 criterion = nn.CrossEntropyLoss() # TODO: Check without the ignore_index
-#criterion = nn.NLLLoss()
+# criterion = nn.NLLLoss()
 
 # Instantiate tokenizer
 tokenizer = GPT2TokenizerFast.from_pretrained("gpt2", add_bos_token=True, add_prefix_space=True, trim_offsets=True)
@@ -228,6 +228,8 @@ decoder = AttnDecoderRNN(hidden_size, MAX_LENGTH, num_layers=num_layers, max_len
 
 encoder_optimizer = th.optim.Adam(encoder.parameters(), lr=learning_rate)
 decoder_optimizer = th.optim.Adam(decoder.parameters(), lr=learning_rate)
+# encoder_optimizer = th.optim.SGD(encoder.parameters(), lr=learning_rate)
+# decoder_optimizer = th.optim.SGD(decoder.parameters(), lr=learning_rate)
 
 #-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -450,7 +452,7 @@ def train(learning_rate, val_loader, n_epochs, train_loader, encoder, decoder, e
                 writer.add_scalar("Loss/val", val_loss, iteration)
                 writer.add_scalar("Accuracy/val", val_acc, iteration)
             
-            if batch_idx % 20 == 0:
+            if batch_idx % 20 == 0 and not debugging:
                 if val_loss < min_loss and iteration > 100:
                     save_state(val_loss, val_acc, encoder, decoder, encoder_optimizer, decoder_optimizer, iteration, run_dir)
 
