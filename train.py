@@ -101,6 +101,7 @@ class ReviewDataset(Dataset):
     def batch_detokenize(self, x: th.Tensor):
         return [self.detokenize(x[i]) for i in range(len(x))]
 
+
 """
 Model
 """
@@ -174,17 +175,23 @@ def save_state(loss, accuracy, encoder_model, decoder_model, encoder_optimiser, 
         "decoder_optimiser_state": decoder_optimiser.state_dict(),
         "iteration": iteration
     }
-    for file in os.listdir(f'checkpoints/{run_dir[5:8]}'):
-        os.remove(f"checkpoints/{run_dir[5:8]}/{file}")
-    model_checkpoint_path = f"checkpoints/{run_dir[5:8]}/{run_dir[9:]}_l_{loss}_a_{accuracy}_{iteration}.pth"
+    
+    save_dir = f'checkpoints/{run_dir[5:8]}'
+    if os.path.exists(save_dir):
+        for file in os.listdir(f'checkpoints/{run_dir[5:8]}'):
+            os.remove(f"{save_dir}/{file}")
+    else:
+        os.makedirs(save_dir)
+    
+    model_checkpoint_path = f"{save_dir}/{run_dir[9:]}_l_{loss:.5f}_a_{accuracy:.5f}_{iteration}.pth"
     th.save(checkpoint, model_checkpoint_path)
 
 # Prepare for training
 debugging = False # For debugging prints
 model_version = "2.2.0_GRU_bi"
-n_epochs = 250
+n_epochs = 10
 batch_size = 64
-learning_rate = 0.00025
+learning_rate = 0.0005
 teacher_forcing_ratio = 0.5
 hidden_size = 2**8 # 256
 dataset_size = 8000
@@ -441,9 +448,9 @@ def train(learning_rate, val_loader, n_epochs, train_loader, encoder, decoder, e
                 val_sequence_detokenized = dataset.detokenize(val_sequence)
                 writer.add_scalar("Loss/val", val_loss, iteration)
                 writer.add_scalar("Accuracy/val", val_acc, iteration)
-                
-                if val_loss < min_loss and iteration > 125:
-                    save_state(val_loss, val_acc, encoder, decoder, encoder_optimizer, decoder_optimizer, val_loss, iteration, run_dir)
-
+            
+            if batch_idx % 20 == 0:
+                if val_loss < min_loss and iteration > 100:
+                    save_state(val_loss, val_acc, encoder, decoder, encoder_optimizer, decoder_optimizer, iteration, run_dir)
 
 train(learning_rate, val_loader, n_epochs, train_loader, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion)
